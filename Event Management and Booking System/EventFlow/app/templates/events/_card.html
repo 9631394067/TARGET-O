@@ -1,0 +1,51 @@
+{% set cat_icons = {'Music':'🎵','Technology':'💻','Sports':'⚽','Art':'🎨','Food':'🍕','Business':'💼','Health':'🏃','Education':'📚','Comedy':'😂','General':'🎪'} %}
+<a href="{{ url_for('events.detail', event_id=event.id) }}" class="event-card">
+  <div class="event-card-image">
+    {% if event.banner_image and event.banner_image != 'default_event.jpg' %}
+      <img src="{{ url_for('static', filename='uploads/' + event.banner_image) }}" alt="{{ event.title }}" loading="lazy"/>
+    {% else %}
+      {{ cat_icons.get(event.category, '🎪') }}
+    {% endif %}
+    {% if event.is_past %}
+      <span class="event-card-badge badge-past">Past</span>
+    {% elif event.is_sold_out %}
+      <span class="event-card-badge badge-sold-out">Sold Out</span>
+    {% elif event.is_featured %}
+      <span class="event-card-badge badge-featured">⭐ Featured</span>
+    {% elif event.price == 0 %}
+      <span class="event-card-badge badge-free">Free</span>
+    {% endif %}
+  </div>
+  <div class="event-card-body">
+    <div class="event-card-category">{{ cat_icons.get(event.category, '🎪') }} {{ event.category }}</div>
+    <div class="event-card-title">{{ event.title }}</div>
+    <div class="event-card-meta">
+      <div class="event-card-meta-item">
+        <span class="icon">📅</span>
+        <span>{{ event.event_date.strftime('%a, %d %b %Y') }} · {{ event.event_time.strftime('%I:%M %p') }}</span>
+      </div>
+      <div class="event-card-meta-item">
+        <span class="icon">📍</span>
+        <span>{{ event.city or event.venue[:40] }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="event-card-footer">
+    <div>
+      {% if event.price == 0 %}
+        <div class="event-price free">FREE</div>
+      {% else %}
+        <div class="event-price paid">₹{{ '{:,.0f}'.format(event.price) }}</div>
+      {% endif %}
+    </div>
+    <div class="event-seats {{ 'low' if event.available_seats < event.capacity * 0.2 else '' }}">
+      {% if event.is_sold_out %}
+        🔴 Sold Out
+      {% elif event.available_seats < event.capacity * 0.2 %}
+        🟡 {{ event.available_seats }} left!
+      {% else %}
+        {{ event.available_seats }} seats left
+      {% endif %}
+    </div>
+  </div>
+</a>

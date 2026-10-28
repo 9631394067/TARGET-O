@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="EventFlow - Discover, create and book amazing events near you. Music, Tech, Sports, Art and more."/>
+  <title>{% block title %}{{ title or 'EventFlow' }}{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('main.index') }}" class="nav-logo">
+      <div class="logo-icon">⚡</div>
+      <span class="gradient-text">EventFlow</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="{{ url_for('main.index') }}" class="{{ 'active' if request.endpoint == 'main.index' }}">Home</a>
+      <a href="{{ url_for('events.list_events') }}" class="{{ 'active' if request.blueprint == 'events' }}">Events</a>
+      {% if current_user.is_authenticated and current_user.is_organizer() %}
+        <a href="{{ url_for('events.create') }}" class="{{ 'active' if request.endpoint == 'events.create' }}">+ Create Event</a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.is_admin() %}
+        <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.blueprint == 'admin' }}">Admin</a>
+      {% endif %}
+    </div>
+
+    <div class="nav-actions">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('bookings.my_bookings') }}" class="btn btn-secondary btn-sm">🎟️ My Tickets</a>
+        <div class="nav-user">
+          <div class="nav-avatar">{{ current_user.username[0].upper() }}</div>
+          <span style="font-size:0.88rem;font-weight:600;">{{ current_user.username }}</span>
+          <span style="color:var(--text-muted);font-size:0.75rem;">▾</span>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Sign In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Get Started</a>
+      {% endif %}
+    </div>
+
+    <div class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== FLASH MESSAGES ===== -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash-msg flash-{{ category }}">
+          <span>{% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}</span>
+          <span>{{ message }}</span>
+          <span class="flash-close">✕</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="page-wrapper">
+  {% block content %}{% endblock %}
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand-title"><span class="gradient-text">⚡ EventFlow</span></div>
+        <p>Discover, create, and book amazing events near you. Your gateway to unforgettable experiences.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="{{ url_for('events.list_events') }}">All Events</a></li>
+          <li><a href="{{ url_for('events.list_events', category='Music') }}">Music</a></li>
+          <li><a href="{{ url_for('events.list_events', category='Technology') }}">Technology</a></li>
+          <li><a href="{{ url_for('events.list_events', category='Sports') }}">Sports</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <ul>
+          {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('bookings.my_bookings') }}">My Tickets</a></li>
+            {% if current_user.is_organizer() %}
+              <li><a href="{{ url_for('events.create') }}">Create Event</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+          {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+            <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Categories</h4>
+        <ul>
+          <li><a href="{{ url_for('events.list_events', category='Art') }}">Art & Culture</a></li>
+          <li><a href="{{ url_for('events.list_events', category='Food') }}">Food & Drinks</a></li>
+          <li><a href="{{ url_for('events.list_events', category='Business') }}">Business</a></li>
+          <li><a href="{{ url_for('events.list_events', category='Education') }}">Education</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 EventFlow. Built with ❤️ in India 🇮🇳</span>
+      <span>Made with Flask + SQLAlchemy</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top -->
+<button class="back-to-top" id="backToTop" title="Back to top">↑</button>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

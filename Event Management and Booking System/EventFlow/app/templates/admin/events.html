@@ -1,0 +1,55 @@
+{% extends 'admin/layout.html' %}
+{% set cat_icons = {'Music':'🎵','Technology':'💻','Sports':'⚽','Art':'🎨','Food':'🍕','Business':'💼','Health':'🏃','Education':'📚','Comedy':'😂','General':'🎪'} %}
+{% block admin_content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+  <div>
+    <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:0.3rem;">🎪 Manage Events</h1>
+    <p style="color:var(--text-secondary);">{{ events|length }} total events</p>
+  </div>
+  <a href="{{ url_for('events.create') }}" class="btn btn-primary">➕ Create Event</a>
+</div>
+
+<div class="data-table-wrapper">
+  <table class="data-table">
+    <thead><tr>
+      <th>Event</th><th>Category</th><th>Date</th><th>Organizer</th><th>Bookings</th><th>Revenue</th><th>Status</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+      {% for event in events %}
+        <tr>
+          <td>
+            <div style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ event.title }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">{{ event.city }}</div>
+          </td>
+          <td>{{ cat_icons.get(event.category,'🎪') }} {{ event.category }}</td>
+          <td style="font-size:0.82rem;">
+            {{ event.event_date.strftime('%d %b %Y') }}<br/>
+            <span style="color:var(--text-muted);">{{ event.event_time.strftime('%I:%M %p') }}</span>
+          </td>
+          <td>{{ event.organizer.username }}</td>
+          <td>
+            <div style="font-weight:700;">{{ event.booked_count }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">/{{ event.capacity }}</div>
+          </td>
+          <td style="font-weight:600;color:var(--green);">₹{{ '{:,.0f}'.format(event.revenue) }}</td>
+          <td>
+            {% if not event.is_active %}
+              <span class="status-badge status-cancelled">Deleted</span>
+            {% elif event.is_past %}
+              <span class="status-badge" style="background:rgba(71,85,105,0.2);color:#94a3b8;border:1px solid rgba(71,85,105,0.3);">Past</span>
+            {% else %}
+              <span class="status-badge status-confirmed">Active</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:0.5rem;">
+              <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-sm btn-secondary">View</a>
+              <a href="{{ url_for('events.edit', event_id=event.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-narrow" style="padding-top:2rem;padding-bottom:4rem;">
+  <!-- Breadcrumb -->
+  <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--text-muted);margin-bottom:2rem;">
+    <a href="{{ url_for('events.detail', event_id=event.id) }}" style="color:var(--text-muted);">{{ event.title }}</a>
+    <span>›</span>
+    <span>Book Tickets</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:2rem;align-items:start;">
+    <!-- Left: Booking Form -->
+    <div>
+      <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:0.4rem;">🎟️ Book Your Tickets</h1>
+      <p style="color:var(--text-secondary);margin-bottom:2rem;">Complete your booking for <strong style="color:var(--text-primary);">{{ event.title }}</strong></p>
+
+      <form method="POST" action="{{ url_for('bookings.book', event_id=event.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="glass-card" style="padding:2rem;margin-bottom:1.5rem;">
+          <h3 style="margin-bottom:1.25rem;font-size:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Attendee Details</h3>
+
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="attendee_name" class="form-control"
+                   value="{{ current_user.username }}" required
+                   placeholder="Your full name"/>
+          </div>
+
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="attendee_email" class="form-control"
+                   value="{{ current_user.email }}" required
+                   placeholder="your@email.com"/>
+            <div class="form-hint">Booking confirmation will be sent here</div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding:2rem;margin-bottom:2rem;">
+          <h3 style="margin-bottom:1.25rem;font-size:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Number of Tickets</h3>
+
+          <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+            <div class="ticket-counter">
+              <button type="button" class="minus">−</button>
+              <input type="number" name="tickets" value="1" min="1" max="{{ max_tickets }}" readonly/>
+              <button type="button" class="plus">+</button>
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">
+              Max {{ max_tickets }} tickets per booking
+            </div>
+          </div>
+
+          <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+            {% if event.price > 0 %}
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--text-secondary);">Total Amount</span>
+                <span id="total-price" style="font-size:1.5rem;font-weight:800;font-family:'Outfit',sans-serif;color:var(--violet-light);">₹{{ '{:,.0f}'.format(event.price) }}</span>
+              </div>
+              <span id="price-per-ticket" data-price="{{ event.price }}" style="display:none;"></span>
+            {% else %}
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--text-secondary);">Total Amount</span>
+                <span id="total-price" style="font-size:1.5rem;font-weight:800;font-family:'Outfit',sans-serif;color:var(--green);">FREE</span>
+              </div>
+              <span id="price-per-ticket" data-price="0" style="display:none;"></span>
+            {% endif %}
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-xl" style="width:100%;justify-content:center;">
+          🎟️ Confirm Booking
+        </button>
+        <p style="text-align:center;margin-top:0.75rem;font-size:0.8rem;color:var(--text-muted);">
+          You can cancel your booking anytime before the event
+        </p>
+      </form>
+    </div>
+
+    <!-- Right: Event Summary -->
+    <div class="booking-sidebar">
+      <div class="glass-card" style="padding:1.5rem;">
+        <div style="height:140px;border-radius:var(--radius-md);overflow:hidden;background:var(--gradient-violet);display:flex;align-items:center;justify-content:center;font-size:3rem;margin-bottom:1.25rem;">
+          {% if event.banner_image and event.banner_image != 'default_event.jpg' %}
+            <img src="{{ url_for('static', filename='uploads/' + event.banner_image) }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ event.title }}"/>
+          {% else %}
+            🎪
+          {% endif %}
+        </div>
+
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;">{{ event.title }}</h3>
+
+        <div style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+            <span>📅</span> <span>{{ event.event_date.strftime('%A, %d %B %Y') }}</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+            <span>⏰</span> <span>{{ event.event_time.strftime('%I:%M %p') }}</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+            <span>📍</span> <span>{{ event.venue }}, {{ event.city }}</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+            <span>🎟️</span> <span>{{ event.available_seats }} seats available</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>initTicketCounter && initTicketCounter();</script>{% endblock %}

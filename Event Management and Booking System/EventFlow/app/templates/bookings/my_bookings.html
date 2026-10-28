@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% set cat_icons = {'Music':'🎵','Technology':'💻','Sports':'⚽','Art':'🎨','Food':'🍕','Business':'💼','Health':'🏃','Education':'📚','Comedy':'😂','General':'🎪'} %}
+{% block content %}
+<div class="container" style="padding-top:2rem;padding-bottom:4rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:0.3rem;">🎟️ My Tickets</h1>
+      <p style="color:var(--text-secondary);">{{ bookings|length }} booking{{ 's' if bookings|length != 1 }} total</p>
+    </div>
+    <a href="{{ url_for('events.list_events') }}" class="btn btn-primary">Explore More Events</a>
+  </div>
+
+  {% if bookings %}
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+      {% set confirmed = bookings|selectattr('status','equalto','confirmed')|list %}
+      {% set cancelled = bookings|selectattr('status','equalto','cancelled')|list %}
+      <div class="glass-card" style="padding:1.25rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--green);">{{ confirmed|length }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">Active Bookings</div>
+      </div>
+      <div class="glass-card" style="padding:1.25rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--violet-light);">{{ confirmed|sum(attribute='tickets_count') }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">Total Tickets</div>
+      </div>
+      <div class="glass-card" style="padding:1.25rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--cyan);">₹{{ '{:,.0f}'.format(confirmed|sum(attribute='total_price')) }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">Total Spent</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      {% for booking in bookings %}
+        <div class="booking-ticket {{ 'opacity: 0.6' if booking.status == 'cancelled' else '' }}"
+             style="{{ 'opacity:0.55;' if booking.status == 'cancelled' else '' }}">
+          <div class="ticket-image">
+            {% if booking.event.banner_image and booking.event.banner_image != 'default_event.jpg' %}
+              <img src="{{ url_for('static', filename='uploads/' + booking.event.banner_image) }}" alt="{{ booking.event.title }}"/>
+            {% else %}
+              {{ cat_icons.get(booking.event.category, '🎪') }}
+            {% endif %}
+          </div>
+
+          <div class="ticket-body">
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;flex-wrap:wrap;">
+              <span class="status-badge status-{{ booking.status }}">
+                {{ '✅' if booking.status == 'confirmed' else '❌' }} {{ booking.status.title() }}
+              </span>
+              <span style="font-size:0.75rem;color:var(--text-muted);">REF: <strong style="color:var(--violet-light);font-family:'Outfit',sans-serif;letter-spacing:0.05em;">{{ booking.booking_ref }}</strong></span>
+            </div>
+            <div class="ticket-title">{{ booking.event.title }}</div>
+            <div class="ticket-meta">
+              <span>📅 {{ booking.event.event_date.strftime('%a, %d %b %Y') }} · {{ booking.event.event_time.strftime('%I:%M %p') }}</span>
+              <span>📍 {{ booking.event.city or booking.event.venue[:40] }}</span>
+              <span>🎟️ {{ booking.tickets_count }} ticket{{ 's' if booking.tickets_count > 1 }} ·
+                <strong style="color:{{ 'var(--green)' if booking.total_price == 0 else 'var(--text-primary)' }};">
+                  {% if booking.total_price == 0 %}FREE{% else %}₹{{ '{:,.0f}'.format(booking.total_price) }}{% endif %}
+                </strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="ticket-side">
+            {% if booking.qr_code_path and booking.status == 'confirmed' %}
+              <div class="qr-container" style="padding:0.5rem;">
+                <img src="{{ url_for('static', filename='uploads/' + booking.qr_code_path) }}"
+                     alt="QR" style="width:70px;height:70px;"/>
+              </div>
+            {% endif %}
+            <a href="{{ url_for('events.detail', event_id=booking.event_id) }}" class="btn btn-secondary btn-sm">View</a>
+            {% if booking.status == 'confirmed' and not booking.event.is_past %}
+              <form action="{{ url_for('bookings.cancel', booking_id=booking.id) }}" method="POST"
+                    onsubmit="return confirm('Cancel this booking?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🎟️</div>
+      <div class="empty-title">No bookings yet</div>
+      <div class="empty-desc">Discover amazing events and book your first ticket!</div>
+      <a href="{{ url_for('events.list_events') }}" class="btn btn-primary btn-lg">Browse Events</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

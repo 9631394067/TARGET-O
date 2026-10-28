@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="padding-top:2rem;padding-bottom:4rem;">
+  <!-- Search + Filters -->
+  <div style="margin-bottom:2rem;">
+    <h1 class="section-title" style="margin-bottom:0.5rem;">🎪 All Events</h1>
+    <p style="color:var(--text-secondary);">Discover {{ pagination.total }} events waiting for you</p>
+  </div>
+
+  <form method="GET" action="{{ url_for('events.list_events') }}" id="filterForm">
+    <div class="search-bar" style="margin-bottom:1.25rem;">
+      <span style="font-size:1.1rem;opacity:0.6;">🔍</span>
+      <input type="text" name="search" placeholder="Search events, cities, keywords..." value="{{ search }}" id="searchInput"/>
+      <input type="hidden" name="category" value="{{ selected_category }}"/>
+      <input type="hidden" name="sort" value="{{ sort }}"/>
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="category-pills" style="margin-bottom:1.25rem;">
+      <a href="{{ url_for('events.list_events', search=search, sort=sort) }}"
+         class="category-pill {{ 'active' if not selected_category }}">🎪 All</a>
+      {% for cat in categories %}
+        <a href="{{ url_for('events.list_events', category=cat, search=search, sort=sort) }}"
+           class="category-pill {{ 'active' if selected_category == cat }}">
+          {{ category_icons.get(cat, '🎪') }} {{ cat }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- Sort -->
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <span style="font-size:0.85rem;color:var(--text-muted);">Sort by:</span>
+      {% for s, label in [('date','📅 Date'), ('price','💰 Price'), ('popular','🔥 Popular')] %}
+        <a href="{{ url_for('events.list_events', sort=s, category=selected_category, search=search) }}"
+           class="btn btn-secondary btn-sm {{ 'btn-primary' if sort == s else '' }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+  </form>
+
+  <!-- Events Grid -->
+  {% if events %}
+    <div class="events-grid stagger">
+      {% for event in events %}
+        {% include 'events/_card.html' %}
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+      <div class="pagination">
+        {% if pagination.has_prev %}
+          <a class="page-btn" href="{{ url_for('events.list_events', page=pagination.prev_num, category=selected_category, search=search, sort=sort) }}">‹</a>
+        {% endif %}
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if page_num %}
+            <a class="page-btn {{ 'active' if page_num == pagination.page }}"
+               href="{{ url_for('events.list_events', page=page_num, category=selected_category, search=search, sort=sort) }}">{{ page_num }}</a>
+          {% else %}
+            <span class="page-btn" style="cursor:default;opacity:0.4;">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+          <a class="page-btn" href="{{ url_for('events.list_events', page=pagination.next_num, category=selected_category, search=search, sort=sort) }}">›</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No events found</div>
+      <div class="empty-desc">Try a different search or category</div>
+      <a href="{{ url_for('events.list_events') }}" class="btn btn-primary">Clear Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

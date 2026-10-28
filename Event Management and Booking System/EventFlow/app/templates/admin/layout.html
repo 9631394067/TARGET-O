@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div style="padding:1rem 1.25rem 1.5rem;">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem;">Admin Panel</div>
+      <div style="font-size:0.9rem;font-weight:600;color:var(--violet-light);">{{ current_user.username }}</div>
+    </div>
+
+    <div class="admin-sidebar-title">Overview</div>
+    <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin.dashboard' }}">
+      📊 Dashboard
+    </a>
+
+    <div class="admin-sidebar-title" style="margin-top:1rem;">Manage</div>
+    <a href="{{ url_for('admin.events') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin.events' }}">
+      🎪 Events
+    </a>
+    <a href="{{ url_for('admin.users') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin.users' }}">
+      👥 Users
+    </a>
+    <a href="{{ url_for('admin.all_bookings') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin.all_bookings' }}">
+      🎟️ Bookings
+    </a>
+
+    <div class="admin-sidebar-title" style="margin-top:1rem;">Quick Actions</div>
+    <a href="{{ url_for('events.create') }}" class="admin-nav-item">➕ Create Event</a>
+    <a href="{{ url_for('events.list_events') }}" class="admin-nav-item">🌐 Public Site</a>
+    <a href="{{ url_for('auth.logout') }}" class="admin-nav-item" style="color:var(--red);">🚪 Logout</a>
+  </aside>
+
+  <!-- Content -->
+  <main class="admin-content">
+    {% block admin_content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

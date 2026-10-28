@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;">
+  <div style="max-width:800px;margin:0 auto;">
+    <h1 style="font-size:2.2rem;font-weight:900;margin-bottom:0.5rem;">About <span class="gradient-text">EventFlow</span></h1>
+    <p style="color:var(--text-secondary);font-size:1.05rem;margin-bottom:3rem;">India's premier event discovery and booking platform.</p>
+
+    <div class="glass-card" style="padding:2rem;margin-bottom:1.5rem;">
+      <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1rem;">🚀 Our Mission</h2>
+      <p style="color:var(--text-secondary);line-height:1.8;">
+        EventFlow connects event organizers with passionate attendees. Whether it's a music concert, tech conference,
+        sports tournament, or art exhibition — we make discovering and booking events effortless. Our platform empowers
+        organizers to reach wider audiences while giving attendees a seamless booking experience with QR-code tickets.
+      </p>
+    </div>
+
+    <div class="glass-card" style="padding:2rem;margin-bottom:1.5rem;">
+      <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1rem;">✨ Features</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+          <span style="font-size:1.5rem;">🎟️</span>
+          <div>
+            <div style="font-weight:700;">QR Code Tickets</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);">Instant digital tickets with unique QR codes for entry</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+          <span style="font-size:1.5rem;">🔍</span>
+          <div>
+            <div style="font-weight:700;">Smart Search</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);">Find events by name, city, category, or price</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+          <span style="font-size:1.5rem;">📊</span>
+          <div>
+            <div style="font-weight:700;">Analytics Dashboard</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);">Real-time stats for organizers and admins</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+          <span style="font-size:1.5rem;">🔒</span>
+          <div>
+            <div style="font-weight:700;">Secure Booking</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);">Role-based access with password hashing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="padding:2rem;">
+      <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1rem;">🛠️ Tech Stack</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:0.6rem;">
+        {% for tech in ['Python', 'Flask', 'SQLAlchemy', 'SQLite', 'Jinja2', 'HTML5', 'CSS3', 'JavaScript'] %}
+          <span class="category-pill" style="cursor:default;">{{ tech }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

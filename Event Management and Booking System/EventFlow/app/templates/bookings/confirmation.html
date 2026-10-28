@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-narrow" style="padding-top:3rem;padding-bottom:4rem;">
+  <div class="confirmation-card glass-card fade-in" style="padding:3rem;text-align:center;">
+    <div class="confirm-icon">✅</div>
+    <h1 style="font-size:2rem;font-weight:900;margin-bottom:0.5rem;">Booking Confirmed!</h1>
+    <p style="color:var(--text-secondary);margin-bottom:2rem;">Your tickets are ready. See you at the event! 🎉</p>
+
+    <div class="booking-ref-badge" style="margin-bottom:2rem;">
+      REF: {{ booking.booking_ref }}
+    </div>
+
+    <!-- Event Summary -->
+    <div style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.2);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem;text-align:left;">
+      <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:1rem;">{{ booking.event.title }}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.88rem;">
+        <div>
+          <div style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Date</div>
+          <div style="font-weight:600;">{{ booking.event.event_date.strftime('%d %B %Y') }}</div>
+        </div>
+        <div>
+          <div style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Time</div>
+          <div style="font-weight:600;">{{ booking.event.event_time.strftime('%I:%M %p') }}</div>
+        </div>
+        <div>
+          <div style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Venue</div>
+          <div style="font-weight:600;">{{ booking.event.venue }}, {{ booking.event.city }}</div>
+        </div>
+        <div>
+          <div style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Tickets</div>
+          <div style="font-weight:600;">{{ booking.tickets_count }} ticket{{ 's' if booking.tickets_count > 1 }}</div>
+        </div>
+        <div>
+          <div style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Attendee</div>
+          <div style="font-weight:600;">{{ booking.attendee_name }}</div>
+        </div>
+        <div>
+          <div style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Total Paid</div>
+          <div style="font-weight:700;color:{{ 'var(--green)' if booking.total_price == 0 else 'var(--violet-light)' }};">
+            {% if booking.total_price == 0 %}FREE{% else %}₹{{ '{:,.0f}'.format(booking.total_price) }}{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Code -->
+    {% if booking.qr_code_path %}
+      <div style="margin-bottom:2rem;">
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Show this QR code at the venue entrance</p>
+        <div class="qr-container">
+          <img src="{{ url_for('static', filename='uploads/' + booking.qr_code_path) }}"
+               alt="Booking QR Code" style="width:200px;height:200px;"/>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Copy Ref -->
+    <div style="margin-bottom:2rem;">
+      <button class="btn btn-secondary copy-ref" data-ref="{{ booking.booking_ref }}">
+        📋 Copy Booking Reference
+      </button>
+    </div>
+
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('bookings.my_bookings') }}" class="btn btn-primary btn-lg">🎟️ View All My Tickets</a>
+      <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary btn-lg">Explore More Events</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

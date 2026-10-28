@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 2rem;">
+  <div>
+    <div style="font-size:6rem;margin-bottom:1.5rem;">🔍</div>
+    <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.75rem;">Page Not Found</h1>
+    <p style="color:var(--text-secondary);margin-bottom:2rem;">The page you're looking for doesn't exist or has been moved.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg">← Go Home</a>
+      <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary btn-lg">Browse Events</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

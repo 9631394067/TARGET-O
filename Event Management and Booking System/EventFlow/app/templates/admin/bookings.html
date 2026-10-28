@@ -1,0 +1,51 @@
+{% extends 'admin/layout.html' %}
+{% block admin_content %}
+<div style="margin-bottom:2rem;">
+  <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:0.3rem;">🎟️ All Bookings</h1>
+  <p style="color:var(--text-secondary);">{{ bookings.total }} total bookings</p>
+</div>
+
+<div class="data-table-wrapper">
+  <table class="data-table">
+    <thead><tr>
+      <th>Ref</th><th>User</th><th>Event</th><th>Tickets</th><th>Amount</th><th>Status</th><th>Date</th>
+    </tr></thead>
+    <tbody>
+      {% for b in bookings.items %}
+        <tr>
+          <td><span style="font-family:monospace;color:var(--violet-light);font-size:0.85rem;">{{ b.booking_ref }}</span></td>
+          <td>
+            <div style="font-weight:600;">{{ b.attendee_name or b.user.username }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">{{ b.attendee_email or b.user.email }}</div>
+          </td>
+          <td>
+            <a href="{{ url_for('events.detail', event_id=b.event_id) }}" style="color:var(--text-primary);font-weight:500;">
+              {{ b.event.title[:35] }}{{ '...' if b.event.title|length > 35 }}
+            </a>
+          </td>
+          <td>{{ b.tickets_count }}</td>
+          <td style="font-weight:600;">{% if b.total_price == 0 %}FREE{% else %}₹{{ '{:,.0f}'.format(b.total_price) }}{% endif %}</td>
+          <td><span class="status-badge status-{{ b.status }}">{{ b.status }}</span></td>
+          <td style="color:var(--text-muted);font-size:0.8rem;">{{ b.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if bookings.pages > 1 %}
+  <div class="pagination" style="justify-content:flex-start;margin-top:1.5rem;">
+    {% if bookings.has_prev %}
+      <a class="page-btn" href="{{ url_for('admin.all_bookings', page=bookings.prev_num) }}">‹</a>
+    {% endif %}
+    {% for p in bookings.iter_pages() %}
+      {% if p %}
+        <a class="page-btn {{ 'active' if p == bookings.page }}" href="{{ url_for('admin.all_bookings', page=p) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if bookings.has_next %}
+      <a class="page-btn" href="{{ url_for('admin.all_bookings', page=bookings.next_num) }}">›</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% set cat_icons = {'Music':'🎵','Technology':'💻','Sports':'⚽','Art':'🎨','Food':'🍕','Business':'💼','Health':'🏃','Education':'📚','Comedy':'😂','General':'🎪'} %}
+{% block content %}
+<div class="container" style="padding-top:2rem;padding-bottom:4rem;">
+
+  <!-- Breadcrumb -->
+  <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--text-muted);margin-bottom:2rem;">
+    <a href="{{ url_for('main.index') }}" style="color:var(--text-muted);">Home</a>
+    <span>›</span>
+    <a href="{{ url_for('events.list_events') }}" style="color:var(--text-muted);">Events</a>
+    <span>›</span>
+    <span style="color:var(--text-primary);">{{ event.title }}</span>
+  </div>
+
+  <!-- Event Banner -->
+  <div class="event-detail-hero" style="margin-bottom:2rem;">
+    {% if event.banner_image and event.banner_image != 'default_event.jpg' %}
+      <img src="{{ url_for('static', filename='uploads/' + event.banner_image) }}" alt="{{ event.title }}"/>
+    {% else %}
+      {{ cat_icons.get(event.category, '🎪') }}
+    {% endif %}
+    <div style="position:absolute;bottom:1.5rem;left:1.5rem;z-index:1;">
+      {% if event.is_featured %}
+        <span class="event-card-badge badge-featured" style="font-size:0.8rem;padding:0.35rem 1rem;">⭐ Featured Event</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="event-detail-grid">
+    <!-- Left: Event Info -->
+    <div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <span class="category-pill" style="cursor:default;">{{ cat_icons.get(event.category,'🎪') }} {{ event.category }}</span>
+        {% if event.is_past %}
+          <span class="status-badge" style="background:rgba(71,85,105,0.2);color:#94a3b8;border:1px solid rgba(71,85,105,0.3);">Past Event</span>
+        {% elif event.is_sold_out %}
+          <span class="status-badge status-cancelled">Sold Out</span>
+        {% else %}
+          <span class="status-badge status-confirmed">Open for Booking</span>
+        {% endif %}
+      </div>
+
+      <h1 style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;margin-bottom:1rem;line-height:1.2;">{{ event.title }}</h1>
+
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:2rem;">
+        <div class="nav-avatar" style="width:36px;height:36px;font-size:0.9rem;">{{ event.organizer.username[0].upper() }}</div>
+        <div>
+          <div style="font-size:0.85rem;font-weight:600;">{{ event.organizer.username }}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">Event Organizer</div>
+        </div>
+      </div>
+
+      <!-- Info Grid -->
+      <div class="event-info-grid">
+        <div class="event-info-item">
+          <div class="event-info-icon">📅</div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Date</div>
+            <div style="font-weight:700;margin-top:0.15rem;">{{ event.event_date.strftime('%A, %d %B %Y') }}</div>
+          </div>
+        </div>
+        <div class="event-info-item">
+          <div class="event-info-icon">⏰</div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Time</div>
+            <div style="font-weight:700;margin-top:0.15rem;">{{ event.event_time.strftime('%I:%M %p') }}</div>
+          </div>
+        </div>
+        <div class="event-info-item">
+          <div class="event-info-icon">📍</div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Venue</div>
+            <div style="font-weight:700;margin-top:0.15rem;">{{ event.venue }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">{{ event.city }}</div>
+          </div>
+        </div>
+        <div class="event-info-item">
+          <div class="event-info-icon">🎟️</div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Capacity</div>
+            <div style="font-weight:700;margin-top:0.15rem;">{{ event.booked_count }} / {{ event.capacity }}</div>
+            <div class="capacity-bar">
+              {% set pct = (event.booked_count / event.capacity * 100)|int %}
+              <div class="capacity-fill {{ 'warn' if pct > 70 else '' }} {{ 'full' if pct >= 100 else '' }}" style="width:{{ pct }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="glass-card" style="padding:1.75rem;margin-top:0.5rem;">
+        <h3 style="margin-bottom:1rem;font-size:1.1rem;">About this Event</h3>
+        <div style="color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;">{{ event.description }}</div>
+      </div>
+
+      <!-- Organizer Actions -->
+      {% if current_user.is_authenticated and (current_user.id == event.organizer_id or current_user.is_admin()) %}
+        <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+          <a href="{{ url_for('events.edit', event_id=event.id) }}" class="btn btn-secondary">✏️ Edit Event</a>
+          <form action="{{ url_for('events.delete', event_id=event.id) }}" method="POST" class="confirm-delete">
+            <button type="submit" class="btn btn-danger">🗑️ Delete</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Booking Sidebar -->
+    <div class="booking-sidebar">
+      <div class="booking-card">
+        <div class="price-display {{ 'free' if event.price == 0 else '' }}">
+          {% if event.price == 0 %}FREE{% else %}₹{{ '{:,.0f}'.format(event.price) }}{% endif %}
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.5rem;">per ticket</div>
+
+        {% if event.is_past %}
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:var(--radius-md);">
+            This event has ended
+          </div>
+        {% elif event.is_sold_out %}
+          <div style="text-align:center;padding:1rem;color:var(--red);background:rgba(239,68,68,0.08);border-radius:var(--radius-md);border:1px solid rgba(239,68,68,0.2);">
+            🔴 Sold Out
+          </div>
+        {% elif not current_user.is_authenticated %}
+          <a href="{{ url_for('auth.login', next=request.url) }}" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.9rem;">
+            Sign In to Book
+          </a>
+          <p style="text-align:center;margin-top:0.75rem;font-size:0.8rem;color:var(--text-muted);">
+            <a href="{{ url_for('auth.register') }}" style="color:var(--violet-light);">Create a free account</a>
+          </p>
+        {% elif user_booked %}
+          <div style="text-align:center;padding:1rem;color:var(--green);background:rgba(16,185,129,0.08);border-radius:var(--radius-md);border:1px solid rgba(16,185,129,0.2);margin-bottom:1rem;">
+            ✅ You're booked!
+          </div>
+          <a href="{{ url_for('bookings.my_bookings') }}" class="btn btn-secondary" style="width:100%;justify-content:center;">View My Tickets</a>
+        {% else %}
+          <a href="{{ url_for('bookings.book', event_id=event.id) }}" class="btn btn-primary pulse" style="width:100%;justify-content:center;padding:0.9rem;font-size:1rem;">
+            🎟️ Book Now
+          </a>
+        {% endif %}
+
+        <div class="divider"></div>
+
+        <div style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+          <div style="display:flex;justify-content:space-between;">
+            <span>Available Seats</span>
+            <span style="color:var(--text-primary);font-weight:600;">{{ event.available_seats }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span>Category</span>
+            <span style="color:var(--text-primary);font-weight:600;">{{ event.category }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span>Organizer</span>
+            <span style="color:var(--text-primary);font-weight:600;">{{ event.organizer.username }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Events -->
+  {% if related %}
+    <div style="margin-top:3rem;">
+      <h2 class="section-title" style="margin-bottom:1.5rem;">Similar Events</h2>
+      <div class="events-grid">
+        {% for rel in related %}
+          {% set event = rel %}
+          {% include 'events/_card.html' %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

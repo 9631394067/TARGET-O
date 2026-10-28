@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+  </div>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span>🔥</span> <span>100+ Events This Month</span>
+        </div>
+        <h1 class="hero-title">
+          Discover <span class="gradient-text">Amazing</span><br/>
+          Events Near You
+        </h1>
+        <p class="hero-desc">
+          From electrifying concerts to thought-provoking tech talks — find, book, and experience events that move you. Your next great memory is one click away.
+        </p>
+        <div class="hero-actions">
+          <a href="{{ url_for('events.list_events') }}" class="btn btn-primary btn-xl">
+            🎟️ Explore Events
+          </a>
+          {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-secondary btn-xl">
+              Create Account →
+            </a>
+          {% else %}
+            <a href="{{ url_for('events.create') }}" class="btn btn-secondary btn-xl">
+              ➕ Host an Event
+            </a>
+          {% endif %}
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="number" data-count="{{ stats.events }}">{{ stats.events }}</div>
+            <div class="label">Live Events</div>
+          </div>
+          <div class="hero-stat">
+            <div class="number" data-count="{{ stats.users }}">{{ stats.users }}</div>
+            <div class="label">Members</div>
+          </div>
+          <div class="hero-stat">
+            <div class="number" data-count="{{ stats.bookings }}">{{ stats.bookings }}</div>
+            <div class="label">Tickets Sold</div>
+          </div>
+          <div class="hero-stat">
+            <div class="number" data-count="{{ stats.cities }}">{{ stats.cities }}</div>
+            <div class="label">Cities</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-card-stack">
+          <div class="hero-event-card card-back">
+            <div class="event-card-banner">🎸</div>
+            <div style="padding-top:0.5rem">
+              <div style="font-weight:700;font-size:0.95rem;">Rock Night Mumbai</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.25rem;">📅 This Saturday</div>
+            </div>
+          </div>
+          <div class="hero-event-card card-front">
+            <div class="event-card-banner" style="font-size:2.5rem;">💻</div>
+            <div style="padding-top:0.75rem">
+              <div style="font-size:0.72rem;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:0.08em;">Featured</div>
+              <div style="font-weight:800;font-size:1.05rem;margin:0.35rem 0;">AI & Future Tech Summit 2024</div>
+              <div style="color:var(--text-secondary);font-size:0.82rem;display:flex;flex-direction:column;gap:0.3rem;">
+                <span>📅 Oct 15, 2024 · 10:00 AM</span>
+                <span>📍 NSCI Dome, Mumbai</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border);">
+                <span style="font-size:1.2rem;font-weight:800;color:var(--violet-light);">₹999</span>
+                <span style="background:var(--gradient-violet);color:#fff;padding:0.4rem 1rem;border-radius:20px;font-size:0.8rem;font-weight:700;">Book Now →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CATEGORIES ===== -->
+<section class="section-sm" style="padding-top:0;">
+  <div class="container">
+    <div style="margin-bottom:1.5rem;">
+      <h2 style="font-size:1.4rem;font-weight:700;">Browse by Category</h2>
+    </div>
+    <div class="category-pills stagger">
+      <a href="{{ url_for('events.list_events') }}" class="category-pill active">🎪 All Events</a>
+      {% for cat in categories %}
+        <a href="{{ url_for('events.list_events', category=cat.name) }}" class="category-pill">
+          {{ cat.icon }} {{ cat.name }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURED EVENTS ===== -->
+{% if featured_events %}
+<section class="section-sm">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">✨ Featured Events</h2>
+        <p class="section-subtitle">Handpicked experiences you won't want to miss</p>
+      </div>
+      <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary btn-sm">View All →</a>
+    </div>
+    <div class="events-grid stagger">
+      {% for event in featured_events %}
+        {% include 'events/_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ===== UPCOMING EVENTS ===== -->
+<section class="section-sm">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">🗓️ Upcoming Events</h2>
+        <p class="section-subtitle">Don't miss out — book your spot today</p>
+      </div>
+      <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary btn-sm">See All →</a>
+    </div>
+    {% if upcoming_events %}
+      <div class="events-grid stagger">
+        {% for event in upcoming_events %}
+          {% include 'events/_card.html' %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🎪</div>
+        <div class="empty-title">No events yet</div>
+        <div class="empty-desc">Be the first to create an amazing event!</div>
+        {% if current_user.is_authenticated and current_user.is_organizer() %}
+          <a href="{{ url_for('events.create') }}" class="btn btn-primary">Create Event</a>
+        {% else %}
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ===== CTA BANNER ===== -->
+{% if not current_user.is_authenticated %}
+<section class="section-sm">
+  <div class="container">
+    <div style="background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.1)); border: 1px solid rgba(124,58,237,0.3); border-radius: var(--radius-xl); padding: 3.5rem; text-align: center;">
+      <h2 style="font-size:2rem;font-weight:800;margin-bottom:1rem;">Ready to Experience More?</h2>
+      <p style="color:var(--text-secondary);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto;">Join thousands of event-goers. Create your free account and start booking unforgettable experiences today.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">🚀 Join EventFlow Free</a>
+        <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary btn-lg">Browse Events</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
