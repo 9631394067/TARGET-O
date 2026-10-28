@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Indian Journal Citation Parser</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #e0e0e0;
+    }
+
+    header {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header .logo { font-size: 2rem; }
+    header h1 { font-size: 1.4rem; font-weight: 700; color: #a78bfa; }
+    header p  { font-size: 0.85rem; color: #9ca3af; }
+
+    .badge {
+      background: #4f46e5;
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 16px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 6px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #4f46e5;
+      color: white;
+    }
+    .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.1); color: white; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 { font-size: 1.1rem; color: #a78bfa; margin-bottom: 16px; }
+
+    label { display: block; font-size: 0.85rem; color: #9ca3af; margin-bottom: 6px; }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+    }
+    textarea { resize: vertical; min-height: 100px; }
+
+    .upload-zone {
+      border: 2px dashed rgba(167,139,250,0.4);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(79,70,229,0.05);
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #a78bfa;
+      background: rgba(79,70,229,0.1);
+    }
+    .upload-zone .icon { font-size: 3rem; margin-bottom: 12px; }
+    .upload-zone p { color: #9ca3af; }
+    .upload-zone .file-name { color: #a78bfa; font-weight: 600; margin-top: 8px; }
+
+    #pdfFileInput { display: none; }
+
+    .options-row {
+      display: flex;
+      gap: 20px;
+      margin: 16px 0;
+      flex-wrap: wrap;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #d1d5db;
+      font-size: 0.9rem;
+    }
+    .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: #4f46e5; }
+
+    .btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(79,70,229,0.4); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-copy { background: rgba(255,255,255,0.1); color: white; padding: 6px 14px; font-size: 0.8rem; }
+    .btn-copy:hover { background: rgba(255,255,255,0.2); }
+
+    .spinner {
+      display: none;
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-section { margin-top: 24px; }
+    .result-section h3 { color: #a78bfa; margin-bottom: 12px; font-size: 1rem; }
+
+    .metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .meta-field {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .meta-field .key { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    .meta-field .val { font-size: 0.9rem; color: #e5e7eb; margin-top: 4px; word-break: break-word; }
+    .meta-field .val.empty { color: #4b5563; font-style: italic; }
+
+    .bibtex-box {
+      background: #0f0c29;
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #a5f3fc;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .confidence-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+    .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; }
+    .alert-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .alert-info { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+
+    .source-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .src-crossref { background: #059669; color: white; }
+    .src-openai   { background: #10a37f; color: white; }
+    .src-regex    { background: #d97706; color: white; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #4b5563;
+      font-size: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📄</div>
+  <div>
+    <h1>Indian Journal Citation Parser <span class="badge">v1.0</span></h1>
+    <p>Automated DOI & Citation Metadata Parser for Indian Regional Journals</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('pdf')">📑 PDF Upload</button>
+    <button class="tab-btn" onclick="switchTab('doi')">🔗 DOI Lookup</button>
+    <button class="tab-btn" onclick="switchTab('text')">📝 Citation Text</button>
+    <button class="tab-btn" onclick="switchTab('about')">ℹ️ About</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 1: PDF UPLOAD -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-content active" id="tab-pdf">
+    <div class="card">
+      <h2>📑 Upload PDF Paper</h2>
+
+      <div class="upload-zone" id="dropZone" onclick="document.getElementById('pdfFileInput').click()">
+        <div class="icon">📂</div>
+        <p>Click to upload or drag & drop a PDF</p>
+        <p style="font-size:0.8rem; margin-top:6px;">Indian journals, conference proceedings, research papers</p>
+        <div class="file-name" id="fileNameDisplay"></div>
+      </div>
+      <input type="file" id="pdfFileInput" accept=".pdf" onchange="handleFileSelect(this)" />
+
+      <div class="options-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="useAI" checked />
+          🤖 Use AI (OpenAI GPT) for enhanced extraction
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="useCrossRef" checked />
+          🌐 Lookup CrossRef API for DOI metadata
+        </label>
+      </div>
+
+      <button class="btn btn-primary" id="parsePdfBtn" onclick="parsePDF()" disabled>
+        <div class="spinner" id="pdfSpinner"></div>
+        <span id="pdfBtnText">🔍 Parse Citation</span>
+      </button>
+    </div>
+
+    <div id="pdfResult"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 2: DOI LOOKUP -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-doi">
+    <div class="card">
+      <h2>🔗 DOI Direct Lookup</h2>
+      <label>Enter DOI</label>
+      <input type="text" id="doiInput" placeholder="e.g. 10.1016/j.ins.2023.119450"
+             onkeypress="if(event.key==='Enter') lookupDOI()" />
+      <br/>
+      <button class="btn btn-primary" onclick="lookupDOI()" style="margin-top:12px;">
+        <div class="spinner" id="doiSpinner"></div>
+        <span id="doiBtnText">🔍 Lookup DOI</span>
+      </button>
+    </div>
+    <div id="doiResult"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 3: CITATION TEXT -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-text">
+    <div class="card">
+      <h2>📝 Parse Citation Text</h2>
+      <label>Citation Style</label>
+      <select id="citationStyle" style="width:200px; margin-bottom:14px;">
+        <option value="APA">APA</option>
+        <option value="IEEE">IEEE</option>
+        <option value="MLA">MLA</option>
+      </select>
+      <label>Paste Citation Text</label>
+      <textarea id="citationText" rows="5"
+        placeholder="Sharma, R., & Gupta, A. (2023). Deep learning for crop disease detection in Indian agriculture. Journal of Agricultural Informatics, 14(2), 45-67. https://doi.org/10.1234/jai.2023.14.2.45"></textarea>
+      <br/>
+      <button class="btn btn-primary" onclick="parseText()" style="margin-top:12px;">
+        <div class="spinner" id="textSpinner"></div>
+        <span id="textBtnText">🔍 Parse Citation</span>
+      </button>
+    </div>
+    <div id="textResult"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 4: ABOUT -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-about">
+    <div class="card">
+      <h2>📘 About This Project</h2>
+      <p style="line-height:1.8; color:#d1d5db; margin-bottom:16px;">
+        This tool solves a major problem in Indian academic research:
+        <strong style="color:#a78bfa;">Indian regional journals are not indexed in major databases</strong>
+        like Scopus or CrossRef, making it hard to generate proper citations automatically.
+      </p>
+      <h3 style="color:#a78bfa; margin-bottom:12px;">🔄 Parsing Pipeline</h3>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border-left:3px solid #4f46e5;">
+          <strong>Step 1:</strong> PDF Text Extraction (pdfplumber → PyMuPDF fallback)
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border-left:3px solid #7c3aed;">
+          <strong>Step 2:</strong> DOI Regex Detection (15+ patterns for Indian formats)
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border-left:3px solid #059669;">
+          <strong>Step 3:</strong> CrossRef API Lookup (Free, 95%+ accuracy if DOI found)
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border-left:3px solid #10a37f;">
+          <strong>Step 4:</strong> OpenAI GPT-4o-mini (for non-standard formats)
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border-left:3px solid #d97706;">
+          <strong>Step 5:</strong> Regex Fallback (year, volume, ISSN, keywords)
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border-left:3px solid #a78bfa;">
+          <strong>Step 6:</strong> BibTeX Generation (ready for LaTeX .bib files)
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🔌 API Endpoints</h2>
+      <div style="display:flex; flex-direction:column; gap:8px; font-family: monospace; font-size:0.85rem;">
+        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">
+          <span style="color:#22c55e;">POST</span> /api/v1/parse/pdf — Upload PDF file
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">
+          <span style="color:#22c55e;">POST</span> /api/v1/parse/doi — Lookup by DOI
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">
+          <span style="color:#22c55e;">POST</span> /api/v1/parse/text — Parse citation text
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">
+          <span style="color:#22c55e;">POST</span> /api/v1/bibtex/from-doi — Raw BibTeX
+        </div>
+        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">
+          <span style="color:#3b82f6;">GET</span>  /api/v1/health — Server health check
+        </div>
+      </div>
+      <p style="margin-top:16px; color:#9ca3af; font-size:0.85rem;">
+        Full documentation: <a href="/docs" style="color:#a78bfa;">/docs</a> (Swagger UI)
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Indian Journal Citation Parser · Built with FastAPI + OpenAI + CrossRef API
+</footer>
+
+<script>
+const API = '';  // Same origin
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── File handling ─────────────────────────────────────────────
+let selectedFile = null;
+
+function handleFileSelect(input) {
+  selectedFile = input.files[0];
+  if (selectedFile) {
+    document.getElementById('fileNameDisplay').textContent = '✅ ' + selectedFile.name;
+    document.getElementById('parsePdfBtn').disabled = false;
+  }
+}
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') {
+    selectedFile = file;
+    document.getElementById('fileNameDisplay').textContent = '✅ ' + file.name;
+    document.getElementById('parsePdfBtn').disabled = false;
+  }
+});
+
+// ── Render result ─────────────────────────────────────────────
+function renderResult(containerId, data) {
+  const container = document.getElementById(containerId);
+
+  if (!data.success) {
+    container.innerHTML = `<div class="alert alert-error">❌ ${data.message}</div>`;
+    return;
+  }
+
+  const m = data.metadata || {};
+  const score = Math.round((m.confidence_score || 0) * 100);
+  const barColor = score >= 80 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+
+  let sourceBadge = '';
+  if (m.source === 'crossref_api') sourceBadge = '<span class="source-badge src-crossref">CrossRef</span>';
+  else if (m.source && m.source.includes('openai')) sourceBadge = '<span class="source-badge src-openai">OpenAI GPT</span>';
+  else sourceBadge = '<span class="source-badge src-regex">Regex</span>';
+
+  const fields = [
+    { key: 'Title', val: m.title },
+    { key: 'Authors', val: m.authors ? m.authors.join('; ') : null },
+    { key: 'Year', val: m.year },
+    { key: 'DOI', val: m.doi ? `<a href="https://doi.org/${m.doi}" target="_blank" style="color:#a78bfa;">${m.doi}</a>` : null },
+    { key: 'Journal', val: m.journal },
+    { key: 'Conference', val: m.conference },
+    { key: 'Volume', val: m.volume },
+    { key: 'Issue', val: m.issue },
+    { key: 'Pages', val: m.pages },
+    { key: 'Publisher', val: m.publisher },
+    { key: 'ISSN', val: m.issn },
+    { key: 'Keywords', val: m.keywords ? m.keywords.join(', ') : null },
+    { key: 'Institution', val: m.institution },
+  ];
+
+  const metaHTML = fields.map(f => `
+    <div class="meta-field">
+      <div class="key">${f.key}</div>
+      <div class="val ${!f.val ? 'empty' : ''}">${f.val || '—'}</div>
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="card result-section">
+      <div class="section-header">
+        <h3>📊 Extracted Metadata ${sourceBadge}</h3>
+        <span style="color:#6b7280; font-size:0.8rem;">Confidence: ${score}%</span>
+      </div>
+      <div class="confidence-bar">
+        <div class="bar-bg"><div class="bar-fill" style="width:${score}%; background:${barColor};"></div></div>
+        <span style="font-size:0.8rem; color:#9ca3af;">${score}%</span>
+      </div>
+      <div class="metadata-grid">${metaHTML}</div>
+    </div>
+
+    ${data.formatted_citation ? `
+    <div class="card">
+      <div class="section-header">
+        <h3>📚 Formatted Citation (${escapeHTML(data.citation_style || 'APA')})</h3>
+        <button class="btn btn-copy" onclick="copyFormattedCitation()">📋 Copy</button>
+      </div>
+      <pre class="bibtex-box" id="formattedCitationOutput" style="white-space:pre-wrap;">${escapeHTML(data.formatted_citation)}</pre>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="section-header">
+        <h3>📝 BibTeX Output</h3>
+        <button class="btn btn-copy" onclick="copyBibtex()">📋 Copy</button>
+      </div>
+      <pre class="bibtex-box" id="bibtexOutput">${escapeHTML(data.bibtex || '')}</pre>
+    </div>
+
+    ${data.raw_text_preview ? `
+    <div class="card">
+      <h3 style="color:#6b7280; margin-bottom:8px; font-size:0.9rem;">📄 PDF Text Preview (first 500 chars)</h3>
+      <pre style="color:#6b7280; font-size:0.8rem; white-space:pre-wrap; word-break:break-word;">${escapeHTML(data.raw_text_preview)}</pre>
+    </div>` : ''}
+  `;
+}
+
+function escapeHTML(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyFormattedCitation() {
+  const node = document.getElementById('formattedCitationOutput');
+  if (node) navigator.clipboard.writeText(node.textContent);
+}
+
+function copyBibtex() {
+  const text = document.getElementById('bibtexOutput').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.currentTarget;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy', 2000);
+  });
+}
+
+// ── Spinner helpers ───────────────────────────────────────────
+function setLoading(spinnerId, btnTextId, loading, label='Parse') {
+  document.getElementById(spinnerId).style.display = loading ? 'block' : 'none';
+  document.getElementById(btnTextId).textContent = loading ? 'Parsing...' : `🔍 ${label}`;
+}
+
+// ── API calls ─────────────────────────────────────────────────
+async function parsePDF() {
+  if (!selectedFile) return;
+  setLoading('pdfSpinner','pdfBtnText',true,'Parse Citation');
+  document.getElementById('pdfResult').innerHTML = '';
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  const useAI = document.getElementById('useAI').checked;
+  const useCrossRef = document.getElementById('useCrossRef').checked;
+
+  try {
+    const res = await fetch(`${API}/api/v1/parse/pdf?use_ai=${useAI}&lookup_crossref=${useCrossRef}`, {
+      method: 'POST', body: form
+    });
+    const data = await res.json();
+    renderResult('pdfResult', data);
+  } catch(e) {
+    document.getElementById('pdfResult').innerHTML = `<div class="alert alert-error">❌ Error: ${e.message}. Is the server running?</div>`;
+  } finally {
+    setLoading('pdfSpinner','pdfBtnText',false,'Parse Citation');
+  }
+}
+
+async function lookupDOI() {
+  const doi = document.getElementById('doiInput').value.trim();
+  if (!doi) { alert('Please enter a DOI'); return; }
+  setLoading('doiSpinner','doiBtnText',true,'Lookup DOI');
+  document.getElementById('doiResult').innerHTML = '';
+
+  try {
+    const res = await fetch(`${API}/api/v1/parse/doi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doi })
+    });
+    const data = await res.json();
+    renderResult('doiResult', data);
+  } catch(e) {
+    document.getElementById('doiResult').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+  } finally {
+    setLoading('doiSpinner','doiBtnText',false,'Lookup DOI');
+  }
+}
+
+async function parseText() {
+  const text = document.getElementById('citationText').value.trim();
+  const style = document.getElementById('citationStyle').value;
+  if (!text) { alert('Please paste a citation'); return; }
+  setLoading('textSpinner','textBtnText',true,'Parse Citation');
+  document.getElementById('textResult').innerHTML = '';
+
+  try {
+    const res = await fetch(`${API}/api/v1/parse/text`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, citation_style: style })
+    });
+    const data = await res.json();
+    renderResult('textResult', data);
+  } catch(e) {
+    document.getElementById('textResult').innerHTML = `<div class="alert alert-error">❌ ${e.message}</div>`;
+  } finally {
+    setLoading('textSpinner','textBtnText',false,'Parse Citation');
+  }
+}
+</script>
+</body>
+</html>
