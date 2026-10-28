@@ -1,0 +1,5 @@
+model,n_clusters,silhouette,davies_bouldin,calinski_harabasz,ARI,NMI,homogeneity,completeness,v_measure
+K-Means,3,0.459,0.835,239.342,0.62,0.659,0.659,0.66,0.659
+Hierarchical (Ward),3,0.446,0.806,220.26,0.615,0.675,0.658,0.694,0.675
+GMM,3,0.409,0.867,133.703,0.507,0.681,0.579,0.825,0.681
+DBSCAN,2,0.641,0.516,327.558,0.471,0.541,0.518,0.566,0.541

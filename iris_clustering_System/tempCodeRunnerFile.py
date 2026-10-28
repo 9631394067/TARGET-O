@@ -1,0 +1,1 @@
+python -m streamlit run iris_clustering/app.py
